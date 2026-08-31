@@ -2,15 +2,14 @@
 description: Deep code audit with a problem registry (CHEK)
 ---
 
-Invoke the CHEK command (code audit). Its trigger definition lives in `AI_COMMANDS.md` (command CHEK); the protocol
-body lives in `CHEK_PROTOCOL.md`.
+Run a CHEK code audit. The protocol body is `CHEK_PROTOCOL.md`; the agent role prompts are `agents/*.md`.
 
-Action: read `CHEK_PROTOCOL.md` and execute steps 1-13 verbatim, in order. Fix nothing before Step 9. Commit nothing
-before Step 13 (the human triggers the commit). Do not skip a step "for brevity". Do not audit the project yourself
-instead of running the fleet.
+Action: read `CHEK_PROTOCOL.md` and execute its steps verbatim, in order. Fix nothing before the fixer step. Commit
+nothing before the final step (the human triggers the commit). Do not skip a step "for brevity". Do not audit the
+project yourself instead of running the fleet.
 
-$ARGUMENTS handling:
+$ARGUMENTS:
 - empty -> audit the whole project.
-- "all"/"everything" -> ignore the suppression registries (chek_never.md + chek_later.md) and re-check everything.
-- a file/module/topic -> that is the audit scope.
-- a list of bugs from the user -> skip steps 1-8, start at Step 9 using that list as the report.
+- "all" / "everything" -> also ignore the suppression registries (chek_never.md + chek_later.md).
+- a file / module / topic -> that is the audit scope.
+- a list of bugs -> skip the find/plan phase, start at the fixer step, use that list as the report.

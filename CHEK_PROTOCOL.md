@@ -1,40 +1,59 @@
-# CHEK_PROTOCOL — the ЧЕК audit protocol, steps 1-13 + Step 4b smart web research (LLM-ONLY, English on purpose)
+# CHEK_PROTOCOL — the CHEK audit protocol, steps 1-13 + Step 4b smart web research (LLM-ONLY, English on purpose)
+# (CHEK, also written ЧЕК — same protocol; the name is bilingual, the document is English.)
 
-SOURCE: this is the PUBLIC copy of CHEK_PROTOCOL.md, published from a private structure repo. Publishing here is a
-  deliberate, manual step, never automatic. Adopt it into your own project by wiring a trigger in whatever
-  command-registry convention your project uses (a bare `ЧЕК`/`chek`/`audit`, optionally with a scope, or
-  `ЧЕК всё`/`audit everything` to ignore the suppression registries — see README "Adopting this protocol").
-TRIGGER: project-defined (see SOURCE above) — this repo does not prescribe a command-registry file, only the
-  protocol body itself.
+SOURCE: this is the public mirror of the CHEK protocol (MIT, see LICENSE). It is published manually from a private
+  structure repo; treat it as the authoritative protocol text for adopting CHEK in your own project.
+TRIGGER: bind a trigger in your project's own convention (a slash command, a chat keyword — `.claude/commands/chek.md`
+  and `.claude/skills/chek/` here are examples) that tells the AI to read this file and execute it. Suggested
+  synonyms: `chek` / `audit` (any case), `audit everything` (ignore the suppression registries), `chek <scope>`,
+  `chek` + a user-supplied bug list (skip to the fixer step).
 CONTRACT: fix nothing before Step 9. Commit nothing before Step 13 (the human starts the commit). Skip no step
   "for brevity" (includes Step 4b when its triggers fire — do not "save tokens" by skipping web research).
-PORTABILITY: the protocol must work on ANY project. Anything project-specific (a language, a domain invariant, a
-  concrete domain split) is a REFERENCE EXAMPLE, not a hardcoded list — Step 5 re-derives the fleet per project.
+PORTABILITY: the protocol must work on ANY project — any language, any domain, code or not. Anything
+  project-specific (a language, a domain invariant, a concrete domain split, a test runner, an error-handling
+  keyword) is a REFERENCE EXAMPLE, never a hardcoded requirement — Step 5 re-derives the fleet per project, and
+  each agents/<name>.md role sources project specifics from CLAUDE.md/PROJECT_MEMORY.md at run time, not from its
+  own body.
+STANDALONE USE: the agents/<name>.md roles are also callable OUTSIDE a full ЧЕК run. The orchestrator MAY spawn a
+  single role directly when it fits the task at hand — e.g. one `checker` on a just-touched module, `gap-finder`
+  after a risky change, one council member for a quick adversarial read, `test-writer` to pin a bug found outside
+  an audit. Same role body, same read-only/edit rules; only the multi-step protocol and Step 13's human-commit
+  gate are ЧЕК-specific. Running the WHOLE fleet as one collapsed agent is still forbidden (see FORBIDDEN).
 FORMAT: flat text, `key: value`, no tables. Agent prompt templates are quoted blocks meant to be pasted verbatim.
+VETO_THRESHOLD: 8. Bad_Apple's `SCORE: X/10` gate throughout this file uses this one number; "the veto threshold"
+  elsewhere means 8. Change it here if ever revised, not in each mention.
 
 ROLES (deliberately separated — never merge them into one agent):
   web-researcher (Step 4b) — internet only: search/fetch/analyze outside sources; read-only on repo docs; never edit.
   checkers (Steps 6, 8) — find only, read-only, never edit.
   fixer (Steps 9, 11) — edits only; does not review itself, does not commit, does not mask symptoms.
-  critics (Step 10 and the FINAL round of Step 11) — TWO of them with DIFFERENT focuses (A: regressions/diff,
-    B: root-vs-symptom/contracts), read-only, never edit, never commit.
-  verifier (intermediate rounds of Step 11) — ONE, scoped to that round's problems, read-only.
+  the council (Step 10 and the FINAL round of Step 11) — AT LEAST FIVE named critics with DIFFERENT, sharp,
+    non-overlapping focuses, read-only, never edit, never commit. The five MANDATORY seats (roster + models + focus
+    text: STEP 10, the single source of truth — do not restate their focuses elsewhere) are Melchior, Balthasar,
+    Casper, Apple, Bad_Apple. Bad_Apple hard-gates the whole loop: veto below the veto threshold, no appeal by
+    agents, not overridable by the other seats converging — only an explicit human override lifts it.
+    NEVER run the council with fewer than five, NEVER remove or rename one of the five, NEVER merge two focuses.
+    A project MAY ADD further seats (a new distinct non-overlapping angle + its own agents/<name>.md, name in the
+    same style) and state them in its own PROJECT_MEMORY.md — the count only ever grows.
+  verifier (intermediate rounds of Step 11) — ONE, scoped to that round's problems, read-only. Bad_Apple ALSO
+    re-runs alone every intermediate round — his veto is never thinned down to save a call.
   test-writer (Step 12) — writes regression tests only, never touches production code.
   commit+push (Step 13) — the HUMAN triggers it, never an agent.
 
-MODELS (`model=` param of the Agent tool; the orchestrator keeps its own model):
-  sonnet — web-researcher (4b), fleet checkers (6), gap-finder (8), fixer (9 and 11), intermediate verifier (11),
-    test-writer (12).
-  opus   — fleet planner (5) and both critics (10, and the final round of 11).
-  reason: the bulk of agents is cheap on sonnet and good enough at finding; the planner needs architectural judgment;
-    the judge that releases a diff to the human must not be weaker than the fixer. Web research is a SEPARATE role
-    (agents/web-researcher.md) so external-truth work is not smuggled into the orchestrator or into code checkers.
-  HONEST about decorrelation: opus and sonnet share a pretrain, so swapping model size buys WEAK decorrelation, not
-    an independent view. The real decorrelation axis is the PROMPT axis — critic A vs critic B having sharp,
-    non-overlapping focuses; web-researcher vs checkers is another axis (outside vs inside). NEVER rest quality on
-    "opus and sonnet will catch different things" alone. The only LLM-judgment-free anchor is the Step 12 stash check.
-  NEVER put checkers on a weak/small model — finding quality IS the product of CHEK.
-  NEVER put web-researcher on a weak/small model either — shallow search theatre is worse than a declared light skip.
+MODELS (`model=` param of the Agent tool; the orchestrator keeps its own model. Names below are the Claude Code
+  concrete form — "delegated tier" = Sonnet-class, "top tier" = Opus-class; another CLI substitutes its own two
+  strongest tiers, same split. STEP 5 and STEP 10 carry the exact per-role assignment; this is the summary):
+  delegated tier — web-researcher (4b), fleet checkers (6), gap-finder (8), fixer (9 and 11), intermediate verifier
+    (11), test-writer (12), and most council seats.
+  top tier — fleet planner (5), and the council seats that release the diff to the human: Apple (stack/market
+    strategy) and Bad_Apple (the hard security gate). These carry the most consequential single judgment calls in
+    the loop, so they are not weaker than the fixer.
+  The smallest tier (Haiku-class) is NEVER used for any CHEK role — finding quality IS the product of CHEK, and
+    shallow search theatre from a weak web-researcher is worse than a declared light skip.
+  HONEST about decorrelation: two tiers of the same vendor share a pretrain, so tier size buys WEAK decorrelation,
+    not an independent view. The real decorrelation axis is the PROMPT axis — five-plus sharp, non-overlapping
+    council focuses; web-researcher vs checkers (outside vs inside). NEVER rest quality on "the two tiers will catch
+    different things" alone. The only LLM-judgment-free anchor is the Step 12 stash check.
 
 FORBIDDEN:
   - auditing the project yourself instead of running the fleet (Steps 5-6)
@@ -42,12 +61,17 @@ FORBIDDEN:
   - delegating Step 2 or Step 4 to agents (the orchestrator does them itself)
   - doing Step 4b yourself in the orchestrator when triggers fired — MUST run the web-researcher agent
   - skipping Step 4b when any of its triggers fired, or doing a single lazy search and calling it "research"
-  - collapsing the fleet into one agent ("I'll run one agent to cover everything")
+  - collapsing the fleet into one agent ("I'll run one agent to cover everything") — a single role called standalone
+    for its own task is fine (see STANDALONE USE); collapsing the whole ЧЕК fleet into one agent is not
   - merging web-researcher into a domain checker or gap-finder "to save a call"
   - the planner leaving a source file outside every domain, hunting bugs instead of designing the fleet, or
     trimming domains below full project coverage
   - the orchestrator hardcoding domains instead of running the planner
-  - critics or the verifier editing code (two agents editing the same files conflict)
+  - running the Step 10 council with fewer than five seats, or removing/renaming one of the five mandatory seats
+  - a council member or the verifier editing code (agents editing the same files conflict)
+  - re-scoring Bad_Apple's veto away by re-reading his own prior reply, or letting the other seats' convergence
+    override a below-threshold SCORE — the veto stands until Bad_Apple himself re-scores at or above the veto
+    threshold or a human overrides it
   - the fixer masking a symptom to silence a reviewer: empty/widened `except`, deleting or weakening tests
   - any agent running `git commit`
   - silently losing an escalated problem — it must end in never/later or stay in chek_open
@@ -69,8 +93,11 @@ Read all three, then:
 1. INVARIANT: every id (`file::symbol::pattern`) appears in at most ONE file. A duplicate across files means a
    broken move from a previous Step 13 → report it, keep the entry in the STRONGEST file (never > later > open),
    remove it from the others.
-2. GC vs code: for each never/later entry, check whether the symbol still exists (Glob+Read/Grep). Symbol gone or
-   heavily changed → the entry is stale: drop it from never; for later, surface it in item 4.
+2. GC vs code: for each never/later entry, check whether the symbol still exists (Glob+Read/Grep).
+   - symbol heavily changed → the entry is stale: drop it from never; for later, surface it in item 4.
+   - symbol GONE entirely (no code left for `deferred_sha` to compare against) → surface to the orchestrator as
+     "deferred/never X's target code was removed — safe to drop, or did it move elsewhere?"; the human decides at
+     Step 13, do not silently delete a later entry on this alone.
 3. SUPPRESSION BLOCK: build one block from never+later and append it to the END of EVERY fleet checker prompt
    (Step 6) and the gap-finder prompt (Step 8):
      ALREADY SETTLED — do NOT report these findings (human marked never / deferred later):
@@ -82,7 +109,10 @@ Read all three, then:
    `passes_life` incremented. They are NEVER suppressed.
 
 "ЧЕК всё" / "audit everything" — ignore suppression (never + later) entirely: full re-check from scratch.
-Finding identity = `file::symbol::pattern`. NEVER a line number (it drifts).
+Finding identity = `file::symbol::pattern`. NEVER a line number (it drifts). Checker/fixer/verifier output uses
+`file:line` for a human to jump to — that is the human-facing report line, NOT the registry id. When a finding is
+written into or merged against a registry (Steps 7 and 13), derive its id from the file plus the enclosing
+function/symbol name at that line; never store the line number itself.
 
 # ============================================================================
 # STEP 2 — tests (orchestrator; Bash)
@@ -113,8 +143,10 @@ skip the step and say so.
 A sweep = a fast project-wide Grep for CLASSES of bug known to bite THIS project/language. Patterns are not
 hardcoded — assemble them:
 1. From project docs (CLAUDE.md / PROJECT_MEMORY.md "known problems", "invariants") pull this project's footguns.
-2. Add language generics for the language found in Step 2: Python — bare `except:`; JS/TS — `==`, `as any`;
-   anywhere — hardcoded secrets/tokens, TODO/FIXME/HACK.
+2. Add language generics for the language(s) found in Step 2. Derive the equivalent footgun pattern for whatever
+   language is actually present — these are examples, not a closed list: Python — bare `except:`, mutable default
+   arg; JS/TS — `==`, `as any`, floating promise; Rust — `.unwrap()`/`.expect()` on non-test paths; Go — ignored
+   `err` (`_ = ...`, `, _ :=`); anywhere — hardcoded secrets/tokens, `TODO`/`FIXME`/`HACK`.
 3. Grep each pattern; keep the results for Step 7.
 
 # ============================================================================
@@ -334,73 +366,76 @@ Collateral edits (adjacent code, not from the report): file:line — why it had 
 Then the orchestrator itself runs the project test command and records the result for the critics.
 
 # ============================================================================
-# STEP 10 — TWO DIFFERENT critics in parallel (orchestrator; Agent x2, model=opus)
+# STEP 10 — the council: the named critics in parallel (orchestrator; Agent xN, N>=5)
 # ============================================================================
 
-MANDATORY: call the Agent tool exactly twice IN ONE MESSAGE, subagent_type="general-purpose", model="opus". They
-get DIFFERENT prompts and work independently — that prompt axis IS the main decorrelation of blind spots. Both are
-READ-ONLY. Shared context: `git diff HEAD`, the report, the fixer's output, the test result.
+MANDATORY: call the Agent tool once per council seat IN ONE MESSAGE — subagent_type="general-purpose", model per
+seat below — with AT LEAST the five mandatory seats, plus any extra seats this project declared in its
+PROJECT_MEMORY.md. Never fewer than five. Each gets a DIFFERENT, sharp, non-overlapping focus; each agent's prompt
+body is its own file (agents/<name>.md) plus this shared context: `git diff HEAD`, the Steps 7+8 audit report, the
+fixer's change list (Step 9 output, including its "Collateral edits" block), the test result. All seats are
+READ-ONLY — none edit, none commit.
 
-Critic A — REGRESSIONS AND DIFF:
-```
-You are a read-only verifier. Focus: REGRESSIONS AND DIFF. You do NOT edit and do NOT commit.
-Preparation: Read the project rules and memory in full; Bash `git diff HEAD`; Read every changed file in full.
-The fixer's change list (including its "Collateral edits" block): [PASTE STEP 9 OUTPUT]
-Tests after the fixer: [PASTE N passed / N failed]
-Check (your angle — did the fixer break what worked):
-- regressions in adjacent code inside the same files/functions the fixer touched
-- the fixer's collateral edits: justified? do they break neighboring behavior?
-- any test that used to pass and now fails — name the cause
-- did behavior change on boundary inputs (empty state, None, unreachable resource)?
-Output, report only:
-## Confirmed fixed
-file:line — ok
-## Regressions / adjacent damage
-file:line — what is wrong — how to fix
-```
+THE COUNCIL — this table is the SINGLE SOURCE OF TRUTH for the roster (names, models, focus). Names are FIXED
+across every project (this is how a human recognizes which lens found what) — never rename, reorder, drop, or
+merge the five mandatory seats. A project MAY append its own extra seats below (distinct non-overlapping angle,
+own agents/<name>.md, same naming style) via PROJECT_MEMORY.md.
+  Melchior   delegated  agents/melchior.md   — pure computation: speed, cost, measurable answer quality.
+  Balthasar  delegated  agents/balthasar.md  — developer/user ergonomics: readable code, clear interface,
+                                                observability/metrics.
+  Casper     delegated  agents/casper.md     — resilience: failure handling, caching, instant failover.
+  Apple      top        agents/apple.md      — strategy: fit with the current stack/market, is there already a
+                                                SaaS/library instead of a bespoke build, Time-to-Market.
+  Bad_Apple  top        agents/bad-apple.md  — security and risk. HARD GATE: every reply ends with a line
+                                                `SCORE: X/10`. Below the veto threshold (or no parseable score) is
+                                                a VETO — no appeal by agents, not overridable by the other seats
+                                                converging; the fix does not reach Step 13 clean until a later
+                                                round clears the bar or a human explicitly overrides it.
+  <extra seats, if any, added per project>
 
-Critic B — ROOT VS SYMPTOM AND CONTRACTS:
-```
-You are a read-only verifier. Focus: ROOT VS SYMPTOM AND CONTRACTS. You do NOT edit and do NOT commit.
-Preparation: Read the project rules and memory in full; Bash `git diff HEAD`; Read every changed file in full.
-Audit report (what should have been fixed): [PASTE STEPS 7 + 8 REPORT]
-The fixer's change list: [PASTE STEP 9 OUTPUT]
-Check (your angle — does the fix cure the cause):
-- each fix: does it solve the root problem, or mask a symptom?
-- new project-rule violations introduced by the edit
-- broken module contracts between the parts this project defines
-- items the fixer skipped: can they be fixed safely? (say how, but do NOT edit)
-Output, report only:
-## Confirmed fixed
-file:line — ok
-## Symptom instead of root / rule violation / broken contract
-file:line — what is wrong — how to fix
-## Not fixed by the fixer
-file:line — can it be fixed safely, and how
-```
+COMMON COUNCIL RULES (apply to EVERY seat — each agents/<name>.md holds only its own angle and refers here):
+  - Prep: read the project rules and memory in full; `git diff HEAD`; Read every changed file in full (not the
+    diff hunks — the whole file).
+  - READ-ONLY: never edit a file, never commit. Council seats run in parallel; parallel edits to the same files
+    conflict, which is why only the fixer edits.
+  - Stay in your lane: judge ONLY your seat's angle; another seat's angle is not your finding.
+  - A finding needs a concrete failure or cost, not a style preference or a vague "something might".
+  - Output in the project's own report language:
+      ## Confirmed fixed
+      file:line — ok
+      ## <your seat's> concerns
+      file:line — what is wrong — [seat-specific: blast radius / who it hurts / metric / alternative] — how to fix
+    Bad_Apple additionally ends with `SCORE: X/10` (see his file and the veto rules above).
 
 # ============================================================================
 # STEP 11 — convergence loop: fix <-> verify until confirmed (orchestrator)
 # ============================================================================
 
-Merge both critics' reports and deduplicate. `unresolved` empty -> go straight to Step 12.
+Merge all council reports and deduplicate. `unresolved` empty AND Bad_Apple's SCORE at or above the veto threshold
+-> go straight to Step 12. Bad_Apple's veto is NOT a "problem" that the other seats can out-vote by converging — it
+is checked independently, every round, exactly like the other seats' problem lists are.
 
 ```
 MAX_PER_PROBLEM = 3        # round cap per problem
 MAX_GLOBAL = 3             # round cap for the whole loop (including newly introduced regressions)
+VETO = VETO_THRESHOLD      # 8 — see the header; "below VETO" is a veto
 round = 1
+bad_apple_score = Bad_Apple's SCORE from Step 10
 
-while unresolved is not empty and round <= MAX_GLOBAL:
-    fix(unresolved)                        # ONE follow-up fixer agent, prompt below
-    update chek_open: per problem passes_run += 1; append an attempt (what was tried)
+while (unresolved is not empty or bad_apple_score is None or bad_apple_score < VETO) and round <= MAX_GLOBAL:
+    fix(unresolved + ["Bad_Apple: <his findings>"] if bad_apple_score < VETO else unresolved)  # ONE follow-up fixer
+    update chek_open: per problem passes_run += 1; append an attempt (what was tried)       # agent, prompt below
     run the project test command
 
     if round == MAX_GLOBAL or unresolved-after-fix looks empty:
-        verify = TWO critics (A + B, Step 10 prompts, model=opus) scoped to this loop's edits
+        verify = ALL council seats (Step 10 prompts) scoped to this loop's edits
     else:
-        verify = ONE scoped verifier (prompt below, model=sonnet)
+        verify = ONE scoped verifier (prompt below, delegated tier) + Bad_Apple ALONE, always (his file, scoped to
+                 this round's edits — his veto check is never thinned down to save a call)
 
-    new = (what the verifier did NOT confirm) + (regressions / new bugs / masking from this round)
+    new = (what the verifier(s) did NOT confirm) + (regressions / new bugs / masking from this round)
+    bad_apple_score = Bad_Apple's SCORE from this round's reply (None if he failed to emit a parseable score —
+                       treat None the same as below VETO, never assume approval from silence)
 
     for p in new:                          # OSCILLATION DETECTOR, per problem
         if p.passes_run > MAX_PER_PROBLEM or the complaint about p is identical to last round:
@@ -410,8 +445,9 @@ while unresolved is not empty and round <= MAX_GLOBAL:
     unresolved = new
     round += 1
 
-resolved  = problems the verifier / final critics confirmed
-escalated = whatever remains in unresolved + anything marked escalated
+resolved       = problems the verifier / final council confirmed
+escalated      = whatever remains in unresolved + anything marked escalated
+bad_apple_veto = bad_apple_score is None or bad_apple_score < VETO once the loop ends
 ```
 
 Intermediate verifier prompt (ONE agent, sonnet, read-only):
@@ -447,9 +483,11 @@ file:line — SKIPPED: reason
 Collateral edits: file:line — why
 ```
 
-After the loop the final test run must be green (or the failure explained). If `escalated` is non-empty, do NOT
-report "all good": those problems go to the human at Step 13 with their full attempt history from chek_open. Not
-converging within MAX_GLOBAL is a NORMAL outcome, not a failure.
+After the loop the final test run must be green (or the failure explained). If `escalated` is non-empty OR
+`bad_apple_veto` is true, do NOT report "all good" — surface the two distinctly at Step 13: an escalated finding
+needs a human decision on the merits, a Bad_Apple veto means the fix must NOT be applied without an explicit human
+security override, full stop. Those problems go to the human at Step 13 with their full attempt history from
+chek_open. Not converging within MAX_GLOBAL is a NORMAL outcome, not a failure.
 
 # ============================================================================
 # STEP 12 — regression tests (orchestrator; ONE agent, model=sonnet)
@@ -480,10 +518,12 @@ LLM judgment, therefore NOT optional:
   - A test that is GREEN even before the fix is a dud: rewrite it so it fails on pre-fix code. If it cannot be made
     to fail -> masking signal -> the problem is NOT resolved, return it to chek_open.
   - STATUS BINDING (default): a problem becomes resolved ONLY if its regression test passed the stash check.
-  - EXCEPTION for bugs genuinely not unit-testable: resolved is allowed WITHOUT a stash test, but only if BOTH final
-    opus critics confirmed the fix addresses the ROOT and is not masking. Mark: "resolved without regression test:
-    <why it is not coverable>".
-  - Neither a passing stash test nor both critics confirming the root -> NOT resolved, stays in chek_open.
+  - EXCEPTION for bugs genuinely not unit-testable: resolved is allowed WITHOUT a stash test, but only if the final
+    council round confirmed the fix addresses the ROOT and is not masking, AND Bad_Apple's SCORE was at or above
+    the veto threshold. Mark:
+    "resolved without regression test: <why it is not coverable>".
+  - Neither a passing stash test nor the final council confirming the root (with Bad_Apple clearing the bar) ->
+    NOT resolved, stays in chek_open.
 
 Resolved problems are DELETED from chek_open at Step 13 — their permanent record is now the test + the commit.
 
@@ -513,7 +553,8 @@ explicit "yes".
    git add <the specific changed files + chek_open.md chek_never.md chek_later.md>   (never `git add -A`)
    git commit -m "<message>"
    git push
-   Branch target and the "confident fix" gate: BRANCHING.md.
+   Branch target and the "confident fix" gate: whatever branch model your project uses (this public mirror does
+   not ship one).
 Commit message: describe WHAT was fixed in substance and why. Never a process message like "CHEK audit of N files"
   — history must explain substance, not method.
 The user says "no"/"stop"/asks for changes -> do not commit; do what they asked, show again, ask again.
