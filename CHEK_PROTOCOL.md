@@ -1,12 +1,12 @@
-# CHEK_PROTOCOL — the CHEK audit protocol, steps 1-13 + Step 4b smart web research (LLM-ONLY, English on purpose)
-# (CHEK, also written ЧЕК — same protocol; the name is bilingual, the document is English.)
+# CHEK_PROTOCOL — the ЧЕК audit protocol, steps 1-13 + Step 4b smart web research (LLM-ONLY, English on purpose)
 
-SOURCE: this is the public mirror of the CHEK protocol (MIT, see LICENSE). It is published manually from a private
-  structure repo; treat it as the authoritative protocol text for adopting CHEK in your own project.
-TRIGGER: bind a trigger in your project's own convention (a slash command, a chat keyword — `.claude/commands/chek.md`
-  and `.claude/skills/chek/` here are examples) that tells the AI to read this file and execute it. Suggested
-  synonyms: `chek` / `audit` (any case), `audit everything` (ignore the suppression registries), `chek <scope>`,
-  `chek` + a user-supplied bug list (skip to the fixer step).
+SOURCE: TIER A, canonical copy lives HERE (ai-dev-kit). This is the most actively iterated file in the kit — keep
+  it continuously current; do not treat it as "set once" like BRANCHING.md. Projects sync a copy; a separate public
+  `chek-protocol` repo also packages this file for general use — publishing there is a distinct, always-manual step
+  performed FROM this repo, never automatic and never triggered by a project sync.
+TRIGGER: defined in AI_COMMANDS.md — the canonical synonym list is there (`ЧЕК`/`chek`/`audit` any case;
+  `ЧЕК всё`/`audit everything`; `<trigger> <scope>`; `<trigger>` + user's bug list). This line only points; if it
+  looks Russian-only, read AI_COMMANDS.md's CHEK block — it is not.
 CONTRACT: fix nothing before Step 9. Commit nothing before Step 13 (the human starts the commit). Skip no step
   "for brevity" (includes Step 4b when its triggers fire — do not "save tokens" by skipping web research).
 PORTABILITY: the protocol must work on ANY project — any language, any domain, code or not. Anything
@@ -165,8 +165,15 @@ WHEN IT FIRES (any one is enough — then run the web-researcher for real, not o
   4. USER / SCOPE — the CHEK scope itself is a research topic.
 WHEN IT MAY STAY LIGHT: pure typo/constant fixes with zero external dependency — orchestrator writes
   `web: skipped, reason=…` in the report and does NOT spawn the agent. NEVER skip silently when triggers 1-4 fired.
+REFERENCE FIRST (mandatory precedence): before any web query, consult the project's engineering reference /
+  standards docs if it has them (route via their index), and the project's own `PROJECT_MEMORY.md` /
+  `TROUBLESHOOTING.md`. Web research is ONLY for the specific delta those do not cover. The `## Web research`
+  brief MUST name which reference doc(s) were consulted (or "none applicable"). When the web fills a reusable gap
+  the reference should own, the brief adds a `## Reference gap` block (target + finding + sources) so a maintainer
+  can fold it in; a project-specific or ephemeral finding stays inline in the report only.
 HOW:
-  1. Orchestrator lists 3-10 concrete search questions from THIS project's domains plus any inefficiency claims.
+  1. Orchestrator lists 3-10 concrete search questions from THIS project's domains plus any inefficiency claims —
+     each phrased as the DELTA beyond what the project's reference docs already state.
   2. Orchestrator runs ONE agent: subagent_type="general-purpose", model="sonnet", body = agents/web-researcher.md
      + the question brief. The agent file defines a HARD LOOP: decompose → multi-query search → diversity check →
      WebFetch primary sources → gap-driven rewrite → cite. Caps: ~18 searches / ~10 fetches / ~4 refine rounds.
@@ -553,8 +560,7 @@ explicit "yes".
    git add <the specific changed files + chek_open.md chek_never.md chek_later.md>   (never `git add -A`)
    git commit -m "<message>"
    git push
-   Branch target and the "confident fix" gate: whatever branch model your project uses (this public mirror does
-   not ship one).
+   Branch target and the "confident fix" gate: BRANCHING.md.
 Commit message: describe WHAT was fixed in substance and why. Never a process message like "CHEK audit of N files"
   — history must explain substance, not method.
 The user says "no"/"stop"/asks for changes -> do not commit; do what they asked, show again, ask again.

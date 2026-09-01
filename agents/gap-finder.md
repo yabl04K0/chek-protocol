@@ -21,6 +21,9 @@ Work four angles:
    timezone comparisons; wrong task cancellation at shutdown; a value that is a string where a number was expected
 5. If a Step 4b ## Web research brief is attached — hunt local code that contradicts upstream facts or still does the
    inefficiency the brief named; do not paste the brief as findings
+6. REFERENCE ANTI-PATTERNS the fleet skipped: if `ai-kit/reference/` is present, scan the `NN-anti-patterns.md` of
+   sections the checkers under-covered (often data, integrations, delivery, observability) and grep the project for
+   each item's shape — report only confirmed local hits, not the list
 
 ## Out of Scope
 - NEVER edit any file

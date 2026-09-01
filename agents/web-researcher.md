@@ -25,8 +25,14 @@ BUDGET (hard caps — stop when hit even if gaps remain; list leftovers under Op
 PHASE A — AIM
 1. Read the orchestrator brief (project, stack, weak spots, 3–10 questions, inefficiency claims).
 2. Skim CLAUDE.md + PROJECT_MEMORY.md ONLY for names/versions/invariants to put into queries — do not re-audit code.
-3. DECOMPOSE: turn each orchestrator question into 2–4 independent sub-queries (entities, versions, error strings,
-   official product names). Total planned sub-queries usually 6–12. Write them down mentally before searching.
+2b. REFERENCE FIRST (mandatory): for every question, first check the project's engineering reference / standards
+   docs if it has them (route via their index; in this account's projects that is `ai-kit/reference/` with its
+   `INDEX.md` / `index.json`), read the matching doc(s), and note what they already answer. Also skim the
+   project's TROUBLESHOOTING.md. The web is ONLY for the DELTA the reference + project docs do not cover. Record
+   which reference doc(s) you consulted in the brief's `reference_consulted:` line. If the reference fully answers
+   a question, that sub-query is DONE — do not search it.
+3. DECOMPOSE: turn each REMAINING (delta) question into 2–4 independent sub-queries (entities, versions, error
+   strings, official product names). Total planned sub-queries usually 6–12. Write them down mentally before searching.
 4. For inefficiency claims: add one "does industry recommend X instead of Y?" sub-query and one "known footgun of Y".
 
 PHASE B — DISCOVER (search) then READ (fetch) — keep them separate
@@ -78,12 +84,13 @@ that becomes a chek_open entry at Step 7. Flat text:
 ```
 ## Web research
 project: <name>
+reference_consulted: <reference file ids read before searching, e.g. security-10, data-03 — or "none applicable">
 searches_run: <N>
 fetches_run: <N>
 refine_rounds: <N>
 distinct_domains: <N>
 skipped: no | yes — <reason if light pass>
-method: decompose>search>fetch>gap-refine>cite
+method: reference-first>decompose>search>fetch>gap-refine>cite
 
 ### Facts
 - fact: ...
@@ -106,5 +113,13 @@ method: decompose>search>fetch>gap-refine>cite
 
 ### Open questions
 - <unsettled gaps, contradictions, budget leftovers>
+
+### Reference gap
+- target_section: <e.g. reference/data — new file NN-<slug>.md, or extend data/03>
+  finding: <the reusable, stable fact the reference is missing, in reference house style>
+  sources: <url(s)>
+  (OMIT this whole block if every web finding was project-specific or ephemeral — nothing to curate upstream.)
 ```
 If the orchestrator allowed a light pass: `skipped: yes — <reason>` and empty sections are OK.
+A non-empty `### Reference gap` block is the signal for `agents/reference-curator.md` to fold the finding into
+`ideal-project/reference/` and re-sync.

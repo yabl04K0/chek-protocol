@@ -13,6 +13,11 @@ outside a full ЧЕК run (CHEK_PROTOCOL.md "STANDALONE USE").
 - Generic focus classes (apply on any project): races/concurrency, unreleased resources and descriptors, state
   left inconsistent after an error, module-boundary mismatches, a check that is present in one path and missing
   in a sibling path
+- REFERENCE ANTI-PATTERNS: if `ai-kit/reference/` is present, open the `NN-anti-patterns.md` of every section your
+  domain touches (security, data, integrations, architecture, testing, delivery, observability, interfaces) and
+  check your domain's real code against each item. Route via `ai-kit/reference/INDEX.md`. A confirmed anti-pattern
+  hit IS a finding (`SEVERITY file:line — <anti-pattern> — what breaks`); a theoretical one with no local code hook
+  is not.
 
 ## Out of Scope
 - NEVER edit any file. You find, the fixer fixes
